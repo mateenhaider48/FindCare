@@ -1,0 +1,26 @@
+
+/node_modules
+
+# env files (can opt-in for committing if needed)
+.env*
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Environment
+.env
+
+# Chroma / generated vector databases
+**/chroma_db/
+
+# Medical knowledge PDFs
+**/*.pdf
+
+# Chroma binary/index files
+*.bin
+
+# Local data
+agents/data/

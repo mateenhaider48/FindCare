@@ -1,0 +1,54 @@
+# ================================
+# LangGraph / LangChain
+# ================================
+langgraph
+langchain
+langchain-core
+langchain-community
+langchain-text-splitters
+
+# LangChain integrations
+langchain-groq
+langchain-huggingface
+langchain-chroma
+
+
+# ================================
+# LLM / API
+# ================================
+groq
+python-dotenv
+
+
+# ================================
+# Hugging Face / Embeddings
+# ================================
+transformers
+huggingface-hub
+sentence-transformers
+
+
+# ================================
+# Data Validation
+# ================================
+pydantic
+typing-extensions
+
+
+# ================================
+# RAG / PDF
+# ================================
+pypdf
+
+
+# ================================
+# Vector Database
+# ================================
+chromadb
+
+
+# ================================
+# Utilities
+# ================================
+tiktoken
+
