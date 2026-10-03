@@ -1,6 +1,35 @@
+# Dependencies
+/node_modules/
 
-/node_modules
+# Environment variables / secrets
+.env
+.env.*
+!.env.example
 
-# env files (can opt-in for committing if needed)
-.env*
+# Python cache
+__pycache__/
+*.py[cod]
 
+# Virtual environments
+.venv/
+venv/
+env/
+
+# IDE / editor
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Test / coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Alembic / local files
+*.db

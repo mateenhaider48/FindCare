@@ -26,6 +26,7 @@ from agents.app.nodes.specialty_classification import specialty_classifier_node
 from agents.app.nodes.symptom_analysis import symptoms_extract_node
 from agents.app.graph.routers import specialty_router
 from agents.app.schemas.state import MedicalState
+from agents.app.nodes.general_node import general_agent
 from agents.app.llm import llm
 
 
@@ -56,6 +57,7 @@ builder.add_node("allergy_immunology_agent", allergy_immunology_agent)
 builder.add_node("hepatology_agent", hepatology_agent)
 builder.add_node("vascular_surgery_agent", vascular_surgery_agent)
 builder.add_node("neurosurgery_agent", neurosurgery_agent)
+builder.add_node("general_agent",general_agent)
 builder.add_node("response_node",response_node)
 
 
@@ -90,7 +92,7 @@ builder.add_edge("allergy_immunology_agent", "response_node")
 builder.add_edge("hepatology_agent", "response_node")
 builder.add_edge("vascular_surgery_agent", "response_node")
 builder.add_edge("neurosurgery_agent", "response_node")
-
+builder.add_edge("general_agent","response_node")
 builder.add_edge("response_node",END)
 
 
