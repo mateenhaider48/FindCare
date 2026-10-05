@@ -13,6 +13,11 @@ def allergy_immunology_agent(state: MedicalState) -> dict:
     Associated symptoms: {state["associated_symptoms"]}
     """
 
+    allergy_immunology_retriever = build_retriever(
+        "agents/data/allergy_immunology/allergy_immunology.pdf",
+        "agents/data/allergy_immunology/chroma_db",
+    )
+
     docs = allergy_immunology_retriever.invoke(query)
 
     context = "\n\n".join(

@@ -14,6 +14,11 @@ def infectious_disease_agent(state: MedicalState) -> dict:
     Associated symptoms: {state["associated_symptoms"]}
     """
 
+    infectious_disease_retriever = build_retriever(
+        "agents/data/infectious_disease/infectious_disease.pdf",
+        "agents/data/infectious_disease/chroma_db",
+    )
+
     docs = infectious_disease_retriever.invoke(query)
 
     context = "\n\n".join(

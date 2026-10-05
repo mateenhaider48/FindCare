@@ -1,4 +1,5 @@
 from langgraph.graph import START,END,StateGraph
+from agents.app.schemas.state import MedicalState
 from agents.app.specialists.cardiology import cardiology_agent
 from agents.app.specialists.neurology import neurology_agent
 from agents.app.specialists.pulmonology import pulmonology_agent
@@ -21,12 +22,11 @@ from agents.app.specialists.allergy_immunology import allergy_immunology_agent
 from agents.app.specialists.infectious_disease import infectious_disease_agent
 from agents.app.specialists.neurosurgery import neurosurgery_agent
 from agents.app.specialists.vascular_surgery import vascular_surgery_agent
+from agents.app.nodes.general_node import general_agent
 from agents.app.nodes.response import response_node
 from agents.app.nodes.specialty_classification import specialty_classifier_node
 from agents.app.nodes.symptom_analysis import symptoms_extract_node
 from agents.app.graph.routers import specialty_router
-from agents.app.schemas.state import MedicalState
-from agents.app.nodes.general_node import general_agent
 from agents.app.llm import llm
 
 
