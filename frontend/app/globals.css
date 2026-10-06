@@ -1,26 +1,57 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/*
+ * Design tokens. Palette comes from the DoctorAvatar design (DoctorAvatar.dc.html).
+ * Use them as Tailwind utilities: bg-primary, text-ink, border-line, bg-mist, ...
+ */
+@theme {
+  --color-primary: #3e8ede;
+  --color-primary-hover: #2f7bc8;
+  --color-primary-soft: #dce9f6;
+  --color-sky: #a9d0f5;
+  --color-mist: #eef5fc;
+  --color-line: #c9dcef;
+  --color-ink: #0f2540;
+  --color-slate: #4b5d73;
+  --color-muted: #6b7c90;
+  --color-blush: #f09a92;
+  --color-danger: #d64545;
+  --color-danger-soft: #fdecec;
+  --color-success: #2e9e6b;
+  --color-success-soft: #e6f6ee;
+  --color-warning: #d98a1c;
+  --color-warning-soft: #fdf3e2;
+
+  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+
+  --radius-card: 1.25rem;
+  --shadow-card: 0 1px 2px rgb(15 37 64 / 0.04), 0 8px 24px -8px rgb(15 37 64 / 0.08);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: #ffffff;
+  color: var(--color-ink);
+}
+
+/* DoctorAvatar animations (from DoctorAvatar.dc.html) */
+@keyframes fcBreathe{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}
+@keyframes fcBlink{0%,93%,100%{transform:scaleY(1)}96%{transform:scaleY(.1)}}
+@keyframes fcTalk{0%,100%{transform:scaleY(.3)}50%{transform:scaleY(1)}}
+@keyframes fcDot{0%,100%{opacity:.2}50%{opacity:1}}
+@keyframes fcTilt{0%,100%{transform:rotate(-2deg)}50%{transform:rotate(-4deg)}}
+@keyframes fcNod{0%,100%{transform:rotate(0deg)}50%{transform:rotate(1.5deg)}}
+@keyframes fcBob{0%,100%{transform:translateY(0) rotate(0deg)}30%{transform:translateY(-1.5px) rotate(1deg)}70%{transform:translateY(.5px) rotate(-1deg)}}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .fc-avatar,
+  .fc-avatar * {
+    animation: none !important;
+  }
 }
