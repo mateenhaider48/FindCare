@@ -1,18 +1,18 @@
-import { CalendarCheck, ClipboardList, Inbox } from "lucide-react";
+import { Clock, MessagesSquare, Stethoscope } from "lucide-react";
 import DoctorAvatar from "@/components/brand/DoctorAvatar";
 import { ButtonLink } from "@/components/ui/Button";
 import Container from "@/components/ui/Container";
 import { site } from "@/lib/site";
 
 const points = [
-  { icon: ClipboardList, text: "Patients arrive with a structured symptom summary and triage level." },
-  { icon: Inbox, text: "Only see cases that match your specialty." },
-  { icon: CalendarCheck, text: "Manage appointments and follow-ups from one dashboard." },
+  { icon: Stethoscope, text: "A specialist AI doctor for every field, from cardiology to dermatology." },
+  { icon: MessagesSquare, text: "Talk in your own words. Your AI doctor asks the right follow-up questions." },
+  { icon: Clock, text: "Available any time, so you get guidance as soon as you need it." },
 ];
 
-export default function ForDoctors() {
+export default function AiDoctors() {
   return (
-    <section id="for-doctors" className="scroll-mt-20 py-20">
+    <section id="ai-doctors" className="scroll-mt-20 py-20">
       <Container className="grid items-center gap-12 lg:grid-cols-2">
         <div className="order-2 mx-auto grid w-full max-w-md grid-cols-2 gap-4 lg:order-1">
           <div className="h-56 overflow-hidden rounded-card bg-mist pt-4">
@@ -23,9 +23,9 @@ export default function ForDoctors() {
           </div>
         </div>
         <div className="order-1 max-w-xl lg:order-2">
-          <p className="text-sm font-semibold text-primary">For doctors</p>
+          <p className="text-sm font-semibold text-primary">Meet your AI doctors</p>
           <h2 className="mt-2 text-3xl font-bold tracking-tight text-ink sm:text-4xl">
-            Spend your time on care, not intake.
+            A specialist for you, ready when you are.
           </h2>
           <ul className="mt-8 space-y-5">
             {points.map((p) => (
@@ -37,8 +37,8 @@ export default function ForDoctors() {
               </li>
             ))}
           </ul>
-          <ButtonLink href={`${site.routes.signup}?role=doctor`} className="mt-8">
-            Join as a doctor
+          <ButtonLink href={site.routes.triage} className="mt-8">
+            Talk to an AI doctor
           </ButtonLink>
         </div>
       </Container>

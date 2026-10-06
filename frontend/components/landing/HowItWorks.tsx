@@ -17,7 +17,7 @@ const steps = [
   {
     icon: Stethoscope,
     title: "Matched to the right specialist",
-    body: "Your symptoms are mapped to a specialty, and you can share the summary with a doctor in one tap.",
+    body: "Your symptoms are mapped to a specialty, and you can continue with the matching AI doctor in one tap.",
   },
 ];
 

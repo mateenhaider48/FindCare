@@ -11,22 +11,22 @@ export default function Hero() {
         <div className="max-w-xl">
           <p className="inline-flex items-center gap-2 rounded-full border border-line bg-white px-3 py-1 text-xs font-semibold text-primary">
             <ShieldCheck className="size-3.5" />
-            AI-assisted triage, reviewed by doctors
+            AI-powered triage with specialist AI doctors
           </p>
           <h1 className="mt-5 text-4xl leading-tight font-extrabold tracking-tight text-ink sm:text-5xl">
             Know which doctor to see <span className="text-primary">before you go.</span>
           </h1>
           <p className="mt-5 text-lg leading-relaxed text-slate">
             Tell FindCare how you feel in your own words. It checks for warning signs, works out which specialty fits
-            your symptoms, and connects you with the right doctor.
+            your symptoms, and connects you with the right AI doctor.
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <ButtonLink href={site.routes.triage} size="lg">
               Check my symptoms
               <ArrowRight className="size-4" />
             </ButtonLink>
-            <ButtonLink href="/#for-doctors" variant="secondary" size="lg">
-              I&apos;m a doctor
+            <ButtonLink href="/#ai-doctors" variant="secondary" size="lg">
+              Meet the AI doctors
             </ButtonLink>
           </div>
           <p className="mt-4 text-xs text-muted">Free to start · Takes about 2 minutes · Not for emergencies</p>
