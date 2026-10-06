@@ -2,11 +2,17 @@ from typing import TypedDict,Annotated
 from langgraph.graph.message import add_messages
 
 
+def merge_symptoms(
+    old: list[str],
+    new: list[str]
+) -> list[str]:
+    return list(dict.fromkeys(old + new))
+
 
 class MedicalState(TypedDict):
    
     messages : Annotated[list,add_messages]
-    symptoms: list[str]
+    symptoms: Annotated[list[str], merge_symptoms]
     new_symptoms: list[str]
     duration: str | None
     severity: str | None

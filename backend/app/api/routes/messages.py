@@ -91,12 +91,6 @@ def create_user_message(
         "active_agent": None,
         "final_response": None,
     }
-    print("\n===== LANGGRAPH MESSAGES =====")
-
-    for msg in langchain_messages:
-        print(type(msg).__name__, ":", msg.content)
-
-    print("==============================\n")
 
     # Call FindCare agent
     result = app.invoke(state)

@@ -7,10 +7,9 @@ from backend.app.api.routes.profile import router as profile_router
 from backend.app.api.routes.conversations import router as conversation_router
 from backend.app.api.routes.messages import router as messages_router
 
-
 app = FastAPI()
 
 app.include_router(auth_router) 
 app.include_router(profile_router) 
 app.include_router(conversation_router)
-app.include_router(messages_router)
+app.include_router(messages_router) 
