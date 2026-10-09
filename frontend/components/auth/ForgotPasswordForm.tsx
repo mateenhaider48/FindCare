@@ -11,7 +11,7 @@ export default function ForgotPasswordForm() {
 
   if (sent) {
     return (
-      <div className="rounded-card border border-line bg-mist p-6 text-center">
+      <div className="rounded-2xl border border-white bg-sky-soft/40 p-6 text-center">
         <span className="mx-auto grid size-12 place-items-center rounded-full bg-success-soft text-success">
           <MailCheck className="size-6" />
         </span>
@@ -27,10 +27,10 @@ export default function ForgotPasswordForm() {
         e.preventDefault();
         setSent(true);
       }}
-      className="space-y-5"
+      className="space-y-3.5"
     >
       <Input label="Email" name="email" type="email" autoComplete="email" placeholder="you@example.com" required />
-      <Button type="submit" size="lg" className="w-full">
+      <Button type="submit" size="md" className="w-full bg-navy hover:bg-[#1b2d4f]">
         Send reset link
       </Button>
     </form>

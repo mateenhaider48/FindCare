@@ -1,6 +1,8 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import Button from "@/components/ui/Button";
+import { nextPath, signIn } from "@/lib/auth";
 
 function GoogleIcon() {
   return (
@@ -26,14 +28,23 @@ function GoogleIcon() {
 }
 
 export default function GoogleButton() {
-  // UI only: Google sign-in is wired up when auth is implemented.
+  const router = useRouter();
+  // Dummy: signs you in directly until Google OAuth is connected.
   return (
     <div>
-      <Button variant="secondary" size="lg" className="w-full">
+      <Button
+        variant="secondary"
+        size="md"
+        className="w-full border-line/70 bg-white"
+        onClick={() => {
+          signIn("Google user");
+          router.push(nextPath());
+        }}
+      >
         <GoogleIcon />
         Continue with Google
       </Button>
-      <div className="my-6 flex items-center gap-4 text-xs text-muted">
+      <div className="my-3 flex items-center gap-4 text-xs text-muted">
         <span className="h-px flex-1 bg-line" />
         or
         <span className="h-px flex-1 bg-line" />

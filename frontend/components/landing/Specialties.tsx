@@ -1,52 +1,19 @@
-import Container from "@/components/ui/Container";
-import SectionHeading from "./SectionHeading";
-
-// Mirrors the specialist agents in agents/app/specialists.
-const specialties = [
-  "Allergy & Immunology",
-  "Cardiology",
-  "Dermatology",
-  "Endocrinology",
-  "ENT",
-  "Gastroenterology",
-  "Gynecology",
-  "Hematology",
-  "Hepatology",
-  "Infectious Disease",
-  "Nephrology",
-  "Neurology",
-  "Neurosurgery",
-  "Oncology",
-  "Ophthalmology",
-  "Orthopedics",
-  "Pediatrics",
-  "Psychiatry",
-  "Pulmonology",
-  "Rheumatology",
-  "Urology",
-  "Vascular Surgery",
-];
+import Reveal from "./Reveal";
+import SpecialtyMarquee from "./SpecialtyMarquee";
 
 export default function Specialties() {
   return (
-    <section id="specialties" className="scroll-mt-20 bg-mist py-20">
-      <Container>
-        <SectionHeading
-          eyebrow="Specialties"
-          title={`${specialties.length} specialties, one starting point`}
-          description="Each specialty has its own assessment, so the questions you're asked fit what you're going through."
-        />
-        <ul className="mt-12 flex flex-wrap justify-center gap-3">
-          {specialties.map((name) => (
-            <li
-              key={name}
-              className="rounded-full border border-line bg-white px-4 py-2 text-sm font-medium text-slate"
-            >
-              {name}
-            </li>
-          ))}
-        </ul>
-      </Container>
+    <section id="specialties" className="overflow-hidden py-[clamp(80px,11vw,150px)]">
+      <Reveal className="mx-auto max-w-[820px] px-[clamp(20px,4vw,48px)] text-center">
+        <div className="font-landing-mono text-xs tracking-[0.06em] text-sky-ink">03 — SPECIALTIES</div>
+        <h2 className="mt-5 text-[clamp(34px,4.4vw,58px)] leading-[1.04] font-semibold tracking-[-0.04em] text-balance">
+          AI doctors across every specialty.
+        </h2>
+        <p className="mx-auto mt-[18px] max-w-[540px] text-[17px] leading-[1.6] text-body">
+          From a skin concern to a second opinion on lab results — there&apos;s a specialist ready to listen.
+        </p>
+      </Reveal>
+      <SpecialtyMarquee />
     </section>
   );
 }

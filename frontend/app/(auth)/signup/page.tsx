@@ -8,6 +8,7 @@ export const metadata: Metadata = { title: "Sign up" };
 export default function SignupPage() {
   return (
     <AuthCard
+      wide
       title="Create your account"
       subtitle="Free to start. Get guidance from an AI doctor in minutes."
       footer={{ text: "Already have an account?", linkLabel: "Log in", href: site.routes.login }}
