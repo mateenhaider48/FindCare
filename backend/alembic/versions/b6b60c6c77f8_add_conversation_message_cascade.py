@@ -1,4 +1,4 @@
-python -m alembic upgrade head"""add conversation message cascade
+"""add conversation message cascade
 
 Revision ID: b6b60c6c77f8
 Revises: 98ac2d8deb3b
