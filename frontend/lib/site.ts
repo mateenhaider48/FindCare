@@ -9,6 +9,11 @@ export const site = {
     login: "/login",
     signup: "/signup",
     forgotPassword: "/forgot-password",
-    triage: "/triage",
+    dashboard: "/dashboard",
+    consultation: "/consultation",
+    session: "/session",
+    doctors: "/doctors",
+    history: "/history",
+    settings: "/settings",
   },
 } as const;

@@ -22,7 +22,24 @@
   --color-warning: #d98a1c;
   --color-warning-soft: #fdf3e2;
 
+  /* Landing page palette (from FindCare Landing design) */
+  --color-brand: #1a5cf0;
+  --color-brand-dark: #0f4fe0;
+  --color-brand-tint: #eaf1ff;
+  --color-navy: #0b1424;
+  --color-paper: #fbfcfd;
+  --color-cloud: #f3f5f8;
+  --color-body: #4b5565;
+  --color-subtle: #6b7486;
+
+  /* Landing v3: one page background, one light blue */
+  --color-page: #f3f5f8;
+  --color-sky-soft: #c3e1ff;
+  --color-sky-ink: #3b93ec; /* readable light-blue for small text and icons */
+
   --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+  --font-landing: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
+  --font-landing-mono: var(--font-geist-mono), ui-monospace, monospace;
 
   --radius-card: 1.25rem;
   --shadow-card: 0 1px 2px rgb(15 37 64 / 0.04), 0 8px 24px -8px rgb(15 37 64 / 0.08);
@@ -37,21 +54,25 @@ body {
   color: var(--color-ink);
 }
 
-/* DoctorAvatar animations (from DoctorAvatar.dc.html) */
-@keyframes fcBreathe{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}
-@keyframes fcBlink{0%,93%,100%{transform:scaleY(1)}96%{transform:scaleY(.1)}}
-@keyframes fcTalk{0%,100%{transform:scaleY(.3)}50%{transform:scaleY(1)}}
-@keyframes fcDot{0%,100%{opacity:.2}50%{opacity:1}}
-@keyframes fcTilt{0%,100%{transform:rotate(-2deg)}50%{transform:rotate(-4deg)}}
-@keyframes fcNod{0%,100%{transform:rotate(0deg)}50%{transform:rotate(1.5deg)}}
-@keyframes fcBob{0%,100%{transform:translateY(0) rotate(0deg)}30%{transform:translateY(-1.5px) rotate(1deg)}70%{transform:translateY(.5px) rotate(-1deg)}}
+/* DoctorAvatar v2 micro-motion (the rest is driven from JS in DoctorAvatar.tsx) */
+@keyframes fcBreath{0%,100%{transform:translateY(0)}50%{transform:translateY(-.55px)}}
+@keyframes fcSwayA{0%,100%{transform:rotate(-.38deg) translate(-.2px,0)}50%{transform:rotate(.42deg) translate(.25px,.15px)}}
+@keyframes fcSwayB{0%,100%{transform:rotate(.16deg) translateY(0)}50%{transform:rotate(-.22deg) translateY(.22px)}}
+@keyframes fcSwayS{0%,100%{transform:rotate(-.12deg)}50%{transform:rotate(.13deg)}}
+
+/* Landing page motion */
+@keyframes fcMarquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+@keyframes fcOrb{0%,100%{transform:scale(1) rotate(0deg)}50%{transform:scale(1.06) rotate(180deg)}}
+@keyframes fcOrbRing{0%{transform:scale(.8);opacity:.7}100%{transform:scale(1.9);opacity:0}}
+@keyframes fcBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+@keyframes fcSpin{to{transform:rotate(360deg)}}
 
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
   }
-  .fc-avatar,
-  .fc-avatar * {
+  [data-fcmotion],
+  [data-motion] {
     animation: none !important;
   }
 }
