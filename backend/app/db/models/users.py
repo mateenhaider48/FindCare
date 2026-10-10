@@ -9,27 +9,22 @@ from backend.app.db.database import Base
 class User(Base):
     __tablename__ = "users"
 
-    id: Mapped[int] = mapped_column(
-        primary_key=True,
-        index=True,
-    )
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
 
-    firebase_uid: Mapped[str] = mapped_column(
-        String(128),
-        unique=True,
-        index=True,
-        nullable=False,
-    )
-
-    name: Mapped[str | None] = mapped_column(
+    name: Mapped[str] = mapped_column(
         String(100),
-        nullable=True,
+        nullable=False,
     )
 
     email: Mapped[str] = mapped_column(
         String(255),
         unique=True,
         index=True,
+        nullable=False,
+    )
+
+    password_hash: Mapped[str] = mapped_column(
+        String(255),
         nullable=False,
     )
 
