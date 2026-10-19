@@ -3,9 +3,7 @@ from pathlib import Path
 from pydantic_settings import BaseSettings
 
 
-ENV_FILE = Path(
-    r"C:\Users\User\OneDrive\Desktop\All-Projects\FindCare-agentic-system\backend\.env"
-)
+ENV_FILE = Path(__file__).resolve().parents[2] / ".env"
 
 
 class Settings(BaseSettings):

@@ -4,13 +4,20 @@ from alembic import context
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
-from app.core.config import settings
-from app.db.database import Base
+import os
+import sys
+
+# Make the repo root importable so `backend.app...` resolves the same way the
+# app does when run from the project root (uvicorn backend.app.main:app).
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
+
+from backend.app.core.config import settings
+from backend.app.db.database import Base
 
 # Import all models so Alembic can detect them
-from app.db.models.users import User
-from app.db.models.conversations import Conversation
-from app.db.models.messages import Message
+from backend.app.db.models.users import User
+from backend.app.db.models.conversations import Conversation
+from backend.app.db.models.messages import Message
 
 
 config = context.config

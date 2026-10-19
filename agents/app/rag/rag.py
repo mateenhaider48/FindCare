@@ -14,8 +14,13 @@ def build_retriever(pdf_path : str,chroma_db_path)->str:
 
     if Path(presist_directory).exists():
         vectorStore = Chroma(persist_directory=presist_directory,embedding_function=embeddings)
-    else:    
-                
+    elif not Path(pdf_path).exists():
+        # No prebuilt vector store and no source PDF on this machine: skip this
+        # specialty so the app can still start. Its data must be provided before
+        # the specialty can be used in a consultation.
+        print(f"[rag] Skipping retriever: no data at {chroma_db_path} or {pdf_path}")
+        return None
+    else:
         loader = PyPDFLoader(pdf_path)
         document = loader.load()
 
