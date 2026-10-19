@@ -15,6 +15,8 @@ import {
 } from "lucide-react";
 import PageHeader from "@/components/app/PageHeader";
 import Card from "@/components/ui/Card";
+import { redirect } from "next/navigation";
+import { adminAuth } from "@/lib/firebase-admin";
 import { ButtonLink } from "@/components/ui/Button";
 import HourlyChart from "@/components/dashboard/HourlyChart";
 import {
@@ -25,7 +27,6 @@ import {
   type AgentStatus,
 } from "@/lib/analytics";
 import { HISTORY, URGENCY } from "@/lib/consultations";
-import { SESSION_COOKIE } from "@/lib/auth";
 import { site } from "@/lib/site";
 import { cn } from "@/lib/utils";
 
@@ -38,8 +39,17 @@ const STATUS_ICON: Record<AgentStatus, typeof CircleCheck> = {
 };
 
 export default async function DashboardPage() {
-  const raw = (await cookies()).get(SESSION_COOKIE)?.value ?? "";
-  const name = decodeURIComponent(raw).split(" ")[0] || "there";
+  const cookieStore = await cookies();
+  const sessionCookie = cookieStore.get("fc_session")?.value;
+
+  if (!sessionCookie) {
+    redirect("/login");
+  }
+  const decodedClaims = await adminAuth.verifySessionCookie(
+    sessionCookie,
+    true,
+  );
+
   const online = AGENTS.filter((a) => a.status === "online").length;
   const issues = AGENTS.filter((a) => a.issue);
 
@@ -73,7 +83,7 @@ export default async function DashboardPage() {
   return (
     <div className="mx-auto w-full max-w-6xl space-y-6 p-4 sm:p-8">
       <PageHeader
-        title={`Welcome back, ${name}`}
+        title={`Welcome back, ${decodedClaims.name}`}
         subtitle="Today at a glance: patients, doctor agents and anything that needs attention."
         action={
           <ButtonLink href={site.routes.consultation}>

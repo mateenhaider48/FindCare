@@ -2,7 +2,10 @@
 
 import { useRouter } from "next/navigation";
 import Button from "@/components/ui/Button";
-import { nextPath, signIn } from "@/lib/auth";
+import { useState } from "react";
+import { nextPath } from "@/lib/auth";
+import { auth, googleProvider } from "@/lib/firebase";
+import { signInWithPopup } from "firebase/auth";
 
 function GoogleIcon() {
   return (
@@ -28,8 +31,74 @@ function GoogleIcon() {
 }
 
 export default function GoogleButton() {
+  const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
   const router = useRouter();
-  // Dummy: signs you in directly until Google OAuth is connected.
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const handleGoogleSignIn = async () => {
+    if (loading) return;
+
+    setLoading(true);
+    setError("");
+
+    try {
+      // Step 1: Google login
+      const result = await signInWithPopup(auth, googleProvider);
+
+      // Step 2: Firebase ID token
+      const idToken = await result.user.getIdToken(true);
+      const response = await fetch(
+        `${API_URL}/api/auth/session`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ idToken }),
+        }
+      );
+
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || "Session creation failed");
+      }
+
+      // Step 4: Dashboard par navigate karo
+      router.replace("/dashboard");
+
+    } catch (error: unknown) {
+      console.error("Google sign-in error:", error);
+
+      const errorCode =
+        typeof error === "object" && error !== null && "code" in error
+          ? String(error.code)
+          : "";
+
+      const errorMessage = error instanceof Error ? error.message : "";
+
+      switch (errorCode) {
+        case "auth/popup-closed-by-user":
+          setError("Google sign-in was cancelled.");
+          break;
+
+        case "auth/popup-blocked":
+          setError("Your browser blocked the Google sign-in popup.");
+          break;
+
+        case "auth/unauthorized-domain":
+          setError("This domain is not authorized in Firebase.");
+          break;
+
+        default:
+          setError(errorMessage || "Google sign-in failed. Please try again.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
   return (
     <div>
       <Button
@@ -37,8 +106,7 @@ export default function GoogleButton() {
         size="md"
         className="w-full border-line/70 bg-white"
         onClick={() => {
-          signIn("Google user");
-          router.push(nextPath());
+          handleGoogleSignIn();
         }}
       >
         <GoogleIcon />

@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { History, LayoutDashboard, LogOut, Settings, Stethoscope, Users } from "lucide-react";
-import { signOut } from "@/lib/auth";
 import Logo from "@/components/brand/Logo";
 import { site } from "@/lib/site";
 import { cn } from "@/lib/utils";
@@ -16,12 +15,24 @@ const items = [
   { label: "Settings", href: site.routes.settings, icon: Settings },
 ];
 
+const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const path = usePathname();
   const router = useRouter();
-  const logout = () => {
-    signOut();
-    router.push("/login");
+  const logout = async () => {
+     const response = await fetch(
+        `${API_URL}/api/auth/logout`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({}),
+        }
+      );
+    router.refresh()
+     router.push("/login");
   };
   const active = (href: string) => path === href || path.startsWith(href + "/");
   return (

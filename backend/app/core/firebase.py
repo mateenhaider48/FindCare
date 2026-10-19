@@ -1,7 +1,7 @@
 import firebase_admin
 from firebase_admin import credentials
 
-from app.core.config import settings
+from backend.app.core.config import settings
 
 
 cred = credentials.Certificate(
