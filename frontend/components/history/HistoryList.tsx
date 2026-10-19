@@ -1,12 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ChevronRight, Search, X } from "lucide-react";
 import { URGENCY, formatDate, type Urgency } from "@/lib/consultations";
 import { site } from "@/lib/site";
 import { cn } from "@/lib/utils";
 import { useHistory } from "./useHistory";
+import { auth } from "@/lib/firebase";
+import { onAuthStateChanged } from "firebase/auth";
+const API_URL = process.env.BACKEND_URL || "http://127.0.0.1:8000";
 
 const RANGES = [
   { key: "all", label: "All time", days: Infinity },
@@ -49,6 +52,49 @@ export default function HistoryList() {
     setField("all");
     setRange("all");
   };
+
+  const [history, setHistory] = useState<unknown[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+  const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+      setError("User login nahi hai.");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const idToken = await user.getIdToken();
+
+      console.log("Token available:", !!idToken);
+
+      const response = await fetch(`${API_URL}/api/conversations`, {
+        headers: {
+          Authorization: `Bearer ${idToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Backend error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log("Fetched history:", data);
+      setHistory(data);
+      setError("");
+    } catch (err) {
+      console.error("History error:", err);
+      setError("Conversation history load nahi ho saki.");
+    } finally {
+      setLoading(false);
+    }
+  });
+
+  return () => unsubscribe();
+}, []);
+
 
   return (
     <div className="space-y-5">

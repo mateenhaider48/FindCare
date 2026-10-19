@@ -125,6 +125,19 @@ def specialty_classifier_node(state: MedicalState) -> dict:
     Brain, spine, or peripheral-nerve conditions that may require
     surgical evaluation.
 
+    Nutrition:
+    General nutrition, healthy eating, dietary planning, and nutritional
+    guidance for maintaining health and supporting weight management.
+
+    Rehabilitation:
+    General rehabilitation, recovery support, mobility improvement, and
+    guidance for restoring physical function and supporting daily activities 
+    after injury, illness, or surgery.
+
+    Dental:
+    General dental care, oral hygiene, tooth and gum concerns, dental symptom 
+    guidance, and information about maintaining oral health.
+
     General:
     Use when the symptoms do not clearly fit one specialty.
 
@@ -166,6 +179,9 @@ def specialty_classifier_node(state: MedicalState) -> dict:
     hepatology
     vascular_surgery
     neurosurgery
+    nutrition
+    rehabilitation
+    dentist
     general
 
     Do not return any explanation.
@@ -198,6 +214,9 @@ def specialty_classifier_node(state: MedicalState) -> dict:
         "hepatology",
         "vascular_surgery",
         "neurosurgery",
+        "nutrition",
+        "rehabilitation",
+        "dentist",
         "general",
     }
 

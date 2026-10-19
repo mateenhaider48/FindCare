@@ -3,15 +3,26 @@ import { cookies } from "next/headers";
 import SessionScreen, { type SessionDoctor } from "@/components/session/SessionScreen";
 import { DOCTORS } from "@/components/landing/data";
 import { JUNIOR_DOCTOR } from "@/lib/consultations";
-import { SESSION_COOKIE } from "@/lib/auth";
+import { adminAuth } from "@/lib/firebase-admin";
+import { redirect } from "next/dist/client/components/navigation";
+
 
 export const metadata: Metadata = { title: "Consultation in progress" };
 
 /** Full-screen live consultation (no app sidebar). */
 export default async function SessionPage({ searchParams }: { searchParams: Promise<{ doctor?: string; q?: string }> }) {
   const { doctor: key, q } = await searchParams;
-  const raw = (await cookies()).get(SESSION_COOKIE)?.value;
-  const patient = raw ? decodeURIComponent(raw) : "Patient";
+  const cookieStore = await cookies();
+    const sessionCookie = cookieStore.get("fc_session")?.value;
+  
+    if (!sessionCookie) {
+      redirect("/login");
+    }
+    const decodedClaims = await adminAuth.verifySessionCookie(
+      sessionCookie,
+      true,
+    );
+  const patient = decodedClaims.name || "Patient"  
   const specialist = DOCTORS.find((d) => d.key === key);
   const doctor: SessionDoctor = specialist
     ? { name: specialist.name, short: specialist.name, role: `${specialist.field} · AI specialist`, field: specialist.field, avatar: specialist.avatar }

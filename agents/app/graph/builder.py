@@ -27,6 +27,9 @@ from agents.app.nodes.response import response_node
 from agents.app.nodes.specialty_classification import specialty_classifier_node
 from agents.app.nodes.symptom_analysis import symptoms_extract_node
 from agents.app.graph.routers import specialty_router
+from agents.app.specialists.rehabilitation import rehabilitation_agent
+from agents.app.specialists.dentist import dental_agent
+from agents.app.specialists.nutrition import nutrition_agent
 from agents.app.llm import llm
 
 
@@ -57,6 +60,9 @@ builder.add_node("allergy_immunology_agent", allergy_immunology_agent)
 builder.add_node("hepatology_agent", hepatology_agent)
 builder.add_node("vascular_surgery_agent", vascular_surgery_agent)
 builder.add_node("neurosurgery_agent", neurosurgery_agent)
+builder.add_node("nutrition_agent", nutrition_agent)
+builder.add_node("rehabilitation_agent", rehabilitation_agent)
+builder.add_node("dentist_agent", dental_agent)
 builder.add_node("general_agent",general_agent)
 builder.add_node("response_node",response_node)
 
@@ -92,6 +98,9 @@ builder.add_edge("allergy_immunology_agent", "response_node")
 builder.add_edge("hepatology_agent", "response_node")
 builder.add_edge("vascular_surgery_agent", "response_node")
 builder.add_edge("neurosurgery_agent", "response_node")
+builder.add_edge("nutrition_agent", "response_node")
+builder.add_edge("dentist_agent", "response_node")
+builder.add_edge("rehabilitation_agent", "response_node")
 builder.add_edge("general_agent","response_node")
 builder.add_edge("response_node",END)
 

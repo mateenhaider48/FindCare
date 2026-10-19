@@ -2,20 +2,107 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { nextPath, signIn } from "@/lib/auth";
+
+import { nextPath } from "@/lib/auth";
+import { auth } from "@/lib/firebase";
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { useState } from "react";
+
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import GoogleButton from "./GoogleButton";
 import PasswordInput from "./PasswordInput";
 
+const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
 export default function SignupForm() {
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
-  // Dummy auth: creating an account just signs you in for now.
-  const submit = (e: React.FormEvent<HTMLFormElement>) => {
+  const submit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    signIn(String(new FormData(e.currentTarget).get("name") ?? "Patient"));
-    router.push(nextPath());
+
+    if (loading) return;
+
+    setError("");
+
+    // Form reference ko await se pehle capture karo.
+    const form = e.currentTarget;
+    const formData = new FormData(form);
+
+    const name = String(formData.get("name") ?? "").trim();
+    const email = String(formData.get("email") ?? "").trim();
+    const password = String(formData.get("password") ?? "");
+    const confirmPassword = String(formData.get("confirmPassword") ?? "");
+
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      // Firebase account create karega.
+      const credential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password,
+      );
+
+      // Firebase profile mein user ka naam save karo.
+      await updateProfile(credential.user, {
+        displayName: name,
+      });
+      const idToken = await credential.user.getIdToken(true);
+       const response = await fetch(
+        `${API_URL}/api/auth/session`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ idToken }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        setError(data.message || "SESSION_CREATION_FAILED");
+      }
+
+
+      router.push("/dashboard");
+    
+    } catch (error: unknown) {
+    
+      const errorCode =
+        typeof error === "object" && error !== null && "code" in error
+          ? String(error.code)
+          : "";
+
+      switch (errorCode) {
+        case "auth/email-already-in-use":
+          setError("This email is already registered. Please log in instead.");
+          break;
+        case "auth/invalid-email":
+          setError("Please enter a valid email address.");
+          break;
+        case "auth/weak-password":
+          setError("Please choose a stronger password.");
+          break;
+        case "auth/network-request-failed":
+          setError("Network error. Please check your connection.");
+          break;
+        default:
+          setError("Failed to create an account. Please try again.");
+      }
+    } finally {
+      setLoading(false);
+    }
   };
+
   return (
     <>
       <GoogleButton />
@@ -64,26 +151,31 @@ export default function SignupForm() {
           />
           <span>
             I agree to the{" "}
-            <Link
-              href="#"
-              className="font-medium text-sky-ink hover:text-navy"
-            >
+            <Link href="#" className="font-medium text-sky-ink hover:text-navy">
               Terms
             </Link>{" "}
             and{" "}
-            <Link
-              href="#"
-              className="font-medium text-sky-ink hover:text-navy"
-            >
+            <Link href="#" className="font-medium text-sky-ink hover:text-navy">
               Privacy Policy
             </Link>
             .
           </span>
+          
         </label>
-        <Button type="submit" size="md" className="w-full bg-navy hover:bg-[#1b2d4f]">
-          Create account
+        <Button
+          type="submit"
+          size="md"
+          disabled={loading}
+          className="w-full bg-navy hover:bg-[#1b2d4f]"
+        >
+          {loading? "Creating account..." : "Create account"}
         </Button>
       </form>
+      {error && (
+  <p role="alert" className="mt-2 text-sm text-center text-red-600">
+    {error}
+  </p>
+)}
     </>
   );
 }
