@@ -18,7 +18,8 @@ import DoctorAvatar, {
   type DoctorAvatarState,
 } from "@/components/brand/DoctorAvatar";
 import { Wordmark } from "@/components/landing/LandingNav";
-import { RED_FLAGS, REVIEW_FLAGS, saveLocal, type Consultation } from "@/lib/consultations";
+import { RED_FLAGS, REVIEW_FLAGS } from "@/lib/consultations";
+import { API_URL } from "@/lib/auth";
 
 const needsReview = (t: string) => [...RED_FLAGS, ...REVIEW_FLAGS].some((f) => t.toLowerCase().includes(f));
 import { site } from "@/lib/site";
@@ -36,23 +37,11 @@ type Msg = { id: number; from: "doctor" | "patient"; text: string; at: number };
 type Noted = { text: string; at: number };
 type Triage = "assessing" | "routine" | "review";
 
-// Scripted follow-ups until the AI backend is connected. **word** is highlighted.
-const FOLLOW_UPS = [
-  "I'm sorry you're feeling unwell. **When did it start**, and has anything made it **better or worse**?",
-  "Thank you. Do you have any **other symptoms**, like a cough, runny nose, rash or **any swelling**?",
-  "Do you have any **long-term conditions**, take regular medicines, or have any **allergies**?",
-  "One last check: is anything making it **hard to breathe, swallow** or stay awake?",
-];
-
 const hhmm = (ms: number) =>
   new Date(ms).toLocaleTimeString("en-GB", {
     hour: "2-digit",
     minute: "2-digit",
   });
-const localDate = (ms: number) => {
-  const d = new Date(ms);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-};
 const mmss = (s: number) =>
   `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
 
@@ -90,15 +79,17 @@ export default function SessionScreen({
   patient,
   opening,
   startedAt,
+  conversationId,
 }: {
   doctor: SessionDoctor;
   patient: string;
   opening?: string;
   startedAt: number;
+  conversationId?: number;
 }) {
   const router = useRouter();
   const first = patient.split(" ")[0];
-  const idRef = useRef(3);
+  const idRef = useRef(2);
   const [msgs, setMsgs] = useState<Msg[]>(() => [
     {
       id: 1,
@@ -114,12 +105,6 @@ export default function SessionScreen({
             text: opening,
             at: startedAt + 20_000,
           },
-          {
-            id: 3,
-            from: "doctor" as const,
-            text: FOLLOW_UPS[0],
-            at: startedAt + 40_000,
-          },
         ]
       : []),
   ]);
@@ -133,7 +118,6 @@ export default function SessionScreen({
         ]
       : [],
   );
-  const [turn, setTurn] = useState(opening ? 1 : 0);
   const [state, setState] = useState<DoctorAvatarState>("speaking");
   const [triage, setTriage] = useState<Triage>(() =>
     opening && needsReview(opening)
@@ -141,7 +125,8 @@ export default function SessionScreen({
       : "assessing",
   );
   const [reviewAt, setReviewAt] = useState<number | null>(null);
-  const [done, setDone] = useState(false);
+  // The real agent decides the flow; the patient ends the session manually.
+  const done = false;
   const [muted, setMuted] = useState(false);
   const [paused, setPaused] = useState(false);
   const [input, setInput] = useState("");
@@ -168,6 +153,60 @@ export default function SessionScreen({
   const later = (fn: () => void, ms: number) =>
     timers.current.push(window.setTimeout(fn, ms));
 
+  // Send one patient turn to the real agent and append its reply. The message
+  // (and the agent's answer) are persisted to the conversation by the backend.
+  const askAgent = async (text: string) => {
+    setState("thinking");
+    if (!conversationId) {
+      setMsgs((m) => [
+        ...m,
+        {
+          id: ++idRef.current,
+          from: "doctor",
+          text: "This session isn't linked to a record, so I can't reply. Please start again from the consultation page.",
+          at: Date.now(),
+        },
+      ]);
+      setState("listening");
+      return;
+    }
+    try {
+      const response = await fetch(`${API_URL}/api/conversations/${conversationId}/messages`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: text }),
+      });
+      if (!response.ok) throw new Error(`Backend error: ${response.status}`);
+      const data = await response.json();
+      const reply: string = data?.agent_message?.content ?? "Sorry, I couldn't process that. Please try again.";
+      setMsgs((m) => [...m, { id: ++idRef.current, from: "doctor", text: reply, at: Date.now() }]);
+      setState("speaking");
+      later(() => setState("listening"), Math.min(5000, 1200 + reply.length * 20));
+    } catch {
+      setMsgs((m) => [
+        ...m,
+        {
+          id: ++idRef.current,
+          from: "doctor",
+          text: "I'm having trouble reaching the clinic right now. Please check your connection and try again.",
+          at: Date.now(),
+        },
+      ]);
+      setState("listening");
+    }
+  };
+
+  // If the consultation opened with a symptom description, send it for the first reply.
+  const openingSent = useRef(false);
+  useEffect(() => {
+    if (opening && !openingSent.current) {
+      openingSent.current = true;
+      askAgent(opening);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const send = (raw: string) => {
     const text = raw.trim();
     if (!text || state === "thinking" || done || paused) return;
@@ -176,90 +215,21 @@ export default function SessionScreen({
     setMsgs((m) => [...m, { id: ++idRef.current, from: "patient", text, at }]);
     if (!/^(no|nope|none|nothing)\b/i.test(text))
       setNoted((n) => [...n, { text: toSymptom(text), at }]);
-    const flagged =
-      triage === "review" ||
-      needsReview(text);
-    if (flagged && triage !== "review") {
+    if (needsReview(text) && triage !== "review") {
       setTriage("review");
       setReviewAt(at);
     }
-    setState("thinking");
-    const next = turn + 1;
-    later(() => {
-      const last = next >= FOLLOW_UPS.length;
-      const reply = last
-        ? flagged
-          ? `Thank you, ${first}. Because of what you described, I'm **sending your case to a senior doctor** now. They'll review it and call you shortly. Your summary is ready.`
-          : `Thank you, ${first}. This sounds **manageable at home** for now. Rest, drink fluids and watch how it changes. I've prepared your **summary**.`
-        : FOLLOW_UPS[next];
-      setMsgs((m) => [
-        ...m,
-        { id: ++idRef.current, from: "doctor", text: reply, at: Date.now() },
-      ]);
-      setTurn(next);
-      setState("speaking");
-      if (last) {
-        setDone(true);
-        if (!flagged) setTriage("routine");
-      }
-      later(
-        () => setState(last ? "idle" : "listening"),
-        Math.min(5000, 1200 + reply.length * 26),
-      );
-    }, 1600);
+    askAgent(text);
   };
 
+  // The transcript is already saved in the DB turn by turn, so ending just
+  // opens the saved consultation.
   const end = () => {
-    const at = Date.now();
-    const id = `fc-${at.toString(36)}`;
-    const review = triage === "review";
-    const told = noted.map((n) => n.text);
-    const record: Consultation = {
-      id,
-      date: localDate(startedAt),
-      start: hhmm(startedAt),
-      end: hhmm(at),
-      doctor: doctor.name,
-      field: doctor.field,
-      concern: told[0] ?? "General consultation",
-      urgency: review ? "review" : "self-care",
-      told: told.length ? told : ["No symptoms were described in this session"],
-      assessment: review
-        ? "Some of what you described needs a senior doctor to look at it before treatment is decided. Your case has been sent for review."
-        : "From what you described, this sounds like a mild, self-limiting problem that can be managed at home for now.",
-      prescription: told.some((t) => /fever|pain|ache|throat/i.test(t))
-        ? [
-            {
-              name: "Paracetamol 500 mg",
-              dose: "2 tablets",
-              often: "Every 6 hours if needed, max 8 a day",
-              duration: "3 days",
-            },
-          ]
-        : [],
-      prescriptionNote: review
-        ? "More medicine may be added after the senior doctor's review."
-        : undefined,
-      advice: [
-        "Rest and drink plenty of fluids.",
-        review
-          ? "Keep your phone nearby so the senior doctor can reach you."
-          : "See a GP if it lasts more than a week or gets worse.",
-      ],
-      emergency:
-        "if breathing gets harder, you feel faint, or symptoms suddenly get much worse.",
-      review: review
-        ? {
-            by: "Dr. Imran Shah",
-            role: "Senior consultant, Margalla General Hospital",
-            phone: "0300 ••• 4512",
-            expectedBy: hhmm((reviewAt ?? at) + 16 * 60_000),
-            inMinutes: 15,
-          }
-        : undefined,
-    };
-    saveLocal(record);
-    router.push(`${site.routes.history}/${id}`);
+    if (conversationId) {
+      router.push(`${site.routes.history}/${conversationId}`);
+    } else {
+      router.push(site.routes.history);
+    }
   };
 
   const elapsed = Math.max(0, Math.floor((now - startedAt) / 1000));

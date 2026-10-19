@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { cookies } from "next/headers";
 import {
   AlertTriangle,
   ArrowRight,
@@ -15,8 +14,7 @@ import {
 } from "lucide-react";
 import PageHeader from "@/components/app/PageHeader";
 import Card from "@/components/ui/Card";
-import { redirect } from "next/navigation";
-import { adminAuth } from "@/lib/firebase-admin";
+import { requireUser } from "@/lib/session";
 import { ButtonLink } from "@/components/ui/Button";
 import HourlyChart from "@/components/dashboard/HourlyChart";
 import {
@@ -26,7 +24,7 @@ import {
   TODAY,
   type AgentStatus,
 } from "@/lib/analytics";
-import { HISTORY, URGENCY } from "@/lib/consultations";
+import { apiGet, type Conversation } from "@/lib/api";
 import { site } from "@/lib/site";
 import { cn } from "@/lib/utils";
 
@@ -39,16 +37,9 @@ const STATUS_ICON: Record<AgentStatus, typeof CircleCheck> = {
 };
 
 export default async function DashboardPage() {
-  const cookieStore = await cookies();
-  const sessionCookie = cookieStore.get("fc_session")?.value;
+  const user = await requireUser();
 
-  if (!sessionCookie) {
-    redirect("/login");
-  }
-  const decodedClaims = await adminAuth.verifySessionCookie(
-    sessionCookie,
-    true,
-  );
+  const conversations = (await apiGet<Conversation[]>("/api/conversations")) ?? [];
 
   const online = AGENTS.filter((a) => a.status === "online").length;
   const issues = AGENTS.filter((a) => a.issue);
@@ -61,9 +52,9 @@ export default async function DashboardPage() {
       icon: Users,
     },
     {
-      label: "Consultations",
-      value: TODAY.consultations,
-      note: "Including follow-ups",
+      label: "Your consultations",
+      value: conversations.length,
+      note: "Total on your account",
       icon: Stethoscope,
     },
     {
@@ -83,7 +74,7 @@ export default async function DashboardPage() {
   return (
     <div className="mx-auto w-full max-w-6xl space-y-6 p-4 sm:p-8">
       <PageHeader
-        title={`Welcome back, ${decodedClaims.name}`}
+        title={`Welcome back, ${user.name}`}
         subtitle="Today at a glance: patients, doctor agents and anything that needs attention."
         action={
           <ButtonLink href={site.routes.consultation}>
@@ -163,31 +154,35 @@ export default async function DashboardPage() {
                 View all <ArrowRight className="size-4" />
               </Link>
             </div>
-            <ul className="mt-3 divide-y divide-line/60">
-              {HISTORY.slice(0, 4).map((c) => (
-                <li key={c.id}>
-                  <Link
-                    href={`${site.routes.history}/${c.id}`}
-                    className="flex flex-wrap items-center justify-between gap-3 py-3 hover:text-primary"
-                  >
-                    <div>
-                      <p className="font-medium text-ink">{c.concern}</p>
-                      <p className="text-xs text-muted">
-                        {c.doctor} · {c.field} · {c.date} · {c.start}
-                      </p>
-                    </div>
-                    <span
-                      className={cn(
-                        "rounded-full px-3 py-1 text-xs font-semibold",
-                        URGENCY[c.urgency].className,
-                      )}
+            {conversations.length === 0 ? (
+              <p className="mt-3 py-6 text-center text-sm text-muted">
+                No consultations yet.
+              </p>
+            ) : (
+              <ul className="mt-3 divide-y divide-line/60">
+                {conversations.slice(0, 4).map((c) => (
+                  <li key={c.id}>
+                    <Link
+                      href={`${site.routes.history}/${c.id}`}
+                      className="flex flex-wrap items-center justify-between gap-3 py-3 hover:text-primary"
                     >
-                      {URGENCY[c.urgency].label}
-                    </span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
+                      <div>
+                        <p className="font-medium text-ink">{c.title || "Consultation"}</p>
+                        <p className="text-xs text-muted">
+                          {new Date(c.created_at).toLocaleString(undefined, {
+                            day: "numeric",
+                            month: "short",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </p>
+                      </div>
+                      <ArrowRight className="size-4 shrink-0 text-muted" />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
           </Card>
         </div>
 

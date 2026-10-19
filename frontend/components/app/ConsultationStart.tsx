@@ -10,7 +10,7 @@ import { DOCTORS } from "@/components/landing/data";
 import { JUNIOR_DOCTOR, RED_FLAGS } from "@/lib/consultations";
 import { site } from "@/lib/site";
 import { cn } from "@/lib/utils";
-import { auth } from "@/lib/firebase";
+import { API_URL } from "@/lib/auth";
 
 const CHIPS = [
   "Fever",
@@ -25,7 +25,6 @@ const CHIPS = [
   "Dizziness",
 ];
 const DURATIONS = ["Today", "A few days", "A week or more", "Over a month"];
-const API_URL = process.env.BACKEND_URL || "http://127.0.0.1:8000";
 /**
  * Start of a consultation: the patient describes what is wrong, red flags are
  * checked as they type, then the live session opens with the junior doctor
@@ -41,37 +40,47 @@ export default function ConsultationStart({
   const [text, setText] = useState("");
   const [duration, setDuration] = useState(DURATIONS[1]);
   const [severity, setSeverity] = useState(4);
+  const [starting, setStarting] = useState(false);
 
   const flagged = RED_FLAGS.some((f) => text.toLowerCase().includes(f));
   const doctorName = specialist?.name ?? JUNIOR_DOCTOR.short;
 
   const addChip = (c: string) =>
     setText((t) => (t ? `${t.trim()}, ${c.toLowerCase()}` : c));
-  const start = (skipForm = false) => {
+
+  // Create the conversation record up front, then open the live session linked
+  // to it so every message is saved to that conversation.
+  const start = async (skipForm = false) => {
+    if (starting) return;
+    setStarting(true);
+
+    const opening =
+      !skipForm && text.trim()
+        ? `${text.trim()} (for ${duration.toLowerCase()}, severity ${severity}/10)`
+        : "";
+    const title = (text.trim() || specialist?.field || "Consultation").slice(0, 120);
+
+    let conversationId: number | undefined;
+    try {
+      const response = await fetch(`${API_URL}/api/conversations`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title }),
+      });
+      if (response.ok) {
+        const data = await response.json();
+        conversationId = data?.id;
+      }
+    } catch {
+      // fall through: open the session without a saved record
+    }
+
     const params = new URLSearchParams();
     if (specialist) params.set("doctor", specialist.key);
-    if (!skipForm && text.trim())
-      params.set(
-        "q",
-        `${text.trim()} (for ${duration.toLowerCase()}, severity ${severity}/10)`,
-      );
+    if (opening) params.set("q", opening);
+    if (conversationId) params.set("c", String(conversationId));
     router.push(`${site.routes.session}${params.size ? `?${params}` : ""}`);
-  };
-
-  const createConversation = async (title: string) => {
-    const user = auth.currentUser;
-    const idToken = await user?.getIdToken();
-    console.log(idToken)
-
-    const response = await fetch(`${API_URL}/api/conversations`, {
-      method: "POST",
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${idToken}`,
-      },
-      body: JSON.stringify({ title }),
-    });
   };
 
   return (
@@ -104,10 +113,7 @@ export default function ConsultationStart({
                 <button
                   key={c}
                   type="button"
-                  onClick={() => {
-                    addChip(c);
-                    createConversation(c);
-                  }}
+                  onClick={() => addChip(c)}
                   className="rounded-full border border-line px-3 py-1.5 text-xs font-medium text-slate transition-colors hover:border-primary hover:bg-primary-soft hover:text-primary"
                 >
                   + {c}
@@ -185,14 +191,15 @@ export default function ConsultationStart({
         )}
 
         <div className="flex flex-wrap gap-3">
-          <Button type="submit" size="lg" disabled={text.trim().length < 3}>
-            {flagged ? "Continue anyway" : `Start with ${doctorName}`}
+          <Button type="submit" size="lg" disabled={text.trim().length < 3 || starting}>
+            {starting ? "Starting..." : flagged ? "Continue anyway" : `Start with ${doctorName}`}
             <ArrowRight className="size-4" />
           </Button>
           <Button
             type="button"
             size="lg"
             variant="secondary"
+            disabled={starting}
             onClick={() => start(true)}
           >
             <Mic className="size-4" />
