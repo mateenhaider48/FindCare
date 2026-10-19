@@ -65,6 +65,12 @@ def specialty_router(state: MedicalState) -> str:
     elif specialty == "neurosurgery":
         return "neurosurgery_agent"
 
+    elif specialty == "allergy_immunology":
+        return "allergy_immunology_agent"
+
+    elif specialty == "infectious_disease":
+        return "infectious_disease_agent"
+
     elif specialty == "nutrition":
         return "nutrition_agent"
 

@@ -41,7 +41,7 @@ def specialty_classifier_node(state: MedicalState) -> dict:
     - hepatology
     - vascular_surgery
     - allergy_immunology
-    - infection_disease
+    - infectious_disease
     - neurosurgery
     - general
 
@@ -125,6 +125,17 @@ def specialty_classifier_node(state: MedicalState) -> dict:
     Brain, spine, or peripheral-nerve conditions that may require
     surgical evaluation.
 
+    Allergy & Immunology:
+    Allergic reactions and immune-system problems such as hives, itching
+    with a known trigger, food or medicine allergy, hay fever, allergic
+    swelling, insect-sting reactions, or frequent infections suggesting a
+    weak immune system.
+
+    Infectious Disease:
+    Infections and fever-led illness such as typhoid, dengue, malaria,
+    tuberculosis, persistent or unexplained fever, infections after travel
+    or exposure, or infections that are not improving.
+
     Nutrition:
     General nutrition, healthy eating, dietary planning, and nutritional
     guidance for maintaining health and supporting weight management.
@@ -179,6 +190,8 @@ def specialty_classifier_node(state: MedicalState) -> dict:
     hepatology
     vascular_surgery
     neurosurgery
+    allergy_immunology
+    infectious_disease
     nutrition
     rehabilitation
     dentist
@@ -214,6 +227,8 @@ def specialty_classifier_node(state: MedicalState) -> dict:
         "hepatology",
         "vascular_surgery",
         "neurosurgery",
+        "allergy_immunology",
+        "infectious_disease",
         "nutrition",
         "rehabilitation",
         "dentist",
