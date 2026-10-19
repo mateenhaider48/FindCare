@@ -1,6 +1,5 @@
-
 import { getApp, getApps, initializeApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider } from "firebase/auth";
+import { getAuth, GoogleAuthProvider, type Auth } from "firebase/auth";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -11,8 +10,24 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+// Without an API key getAuth() throws at import time and takes the whole page
+// down, so auth is initialised lazily and only where it is actually used.
+export const firebaseConfigured = Boolean(firebaseConfig.apiKey);
 
-export const auth = getAuth(app);
+let authInstance: Auth | null = null;
+
+export function getFirebaseAuth(): Auth {
+  if (!firebaseConfigured) {
+    throw Object.assign(
+      new Error("Firebase is not configured: set NEXT_PUBLIC_FIREBASE_* in frontend/.env.local"),
+      { code: "auth/not-configured" },
+    );
+  }
+  if (!authInstance) {
+    const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+    authInstance = getAuth(app);
+  }
+  return authInstance;
+}
+
 export const googleProvider = new GoogleAuthProvider();
-

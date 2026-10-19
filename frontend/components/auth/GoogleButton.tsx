@@ -4,7 +4,8 @@ import { useRouter } from "next/navigation";
 import Button from "@/components/ui/Button";
 import { useState } from "react";
 import { nextPath } from "@/lib/auth";
-import { auth, googleProvider } from "@/lib/firebase";
+import { authErrorMessage, createSession } from "@/lib/auth-client";
+import { getFirebaseAuth, googleProvider } from "@/lib/firebase";
 import { signInWithPopup } from "firebase/auth";
 
 function GoogleIcon() {
@@ -31,87 +32,43 @@ function GoogleIcon() {
 }
 
 export default function GoogleButton() {
-  const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
   const handleGoogleSignIn = async () => {
     if (loading) return;
-
     setLoading(true);
     setError("");
 
     try {
-      // Step 1: Google login
-      const result = await signInWithPopup(auth, googleProvider);
-
-      // Step 2: Firebase ID token
-      const idToken = await result.user.getIdToken(true);
-      const response = await fetch(
-        `${API_URL}/api/auth/session`,
-        {
-          method: "POST",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ idToken }),
-        }
-      );
-
-
-      const data = await response.json();
-
-      if (!response.ok || !data.success) {
-        throw new Error(data.message || "Session creation failed");
-      }
-
-      // Step 4: Dashboard par navigate karo
-      router.replace("/dashboard");
-
-    } catch (error: unknown) {
-      console.error("Google sign-in error:", error);
-
-      const errorCode =
-        typeof error === "object" && error !== null && "code" in error
-          ? String(error.code)
-          : "";
-
-      const errorMessage = error instanceof Error ? error.message : "";
-
-      switch (errorCode) {
-        case "auth/popup-closed-by-user":
-          setError("Google sign-in was cancelled.");
-          break;
-
-        case "auth/popup-blocked":
-          setError("Your browser blocked the Google sign-in popup.");
-          break;
-
-        case "auth/unauthorized-domain":
-          setError("This domain is not authorized in Firebase.");
-          break;
-
-        default:
-          setError(errorMessage || "Google sign-in failed. Please try again.");
-      }
-    } finally {
+      const { user } = await signInWithPopup(getFirebaseAuth(), googleProvider);
+      await createSession(user);
+      router.replace(nextPath());
+      router.refresh();
+    } catch (err) {
+      setError(authErrorMessage(err, "Google sign-in failed. Please try again."));
       setLoading(false);
     }
   };
+
   return (
     <div>
       <Button
         variant="secondary"
         size="md"
+        disabled={loading}
         className="w-full border-line/70 bg-white"
-        onClick={() => {
-          handleGoogleSignIn();
-        }}
+        onClick={handleGoogleSignIn}
       >
         <GoogleIcon />
-        Continue with Google
+        {loading ? "Connecting to Google..." : "Continue with Google"}
       </Button>
+      {error && (
+        <p role="alert" className="mt-2 text-sm text-center text-red-600">
+          {error}
+        </p>
+      )}
       <div className="my-3 flex items-center gap-4 text-xs text-muted">
         <span className="h-px flex-1 bg-line" />
         or

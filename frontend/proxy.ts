@@ -1,8 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { SESSION_COOKIE } from "@/lib/auth";
 
-// Optimistic check for the dummy auth: app pages need the session cookie,
-// and signed-in users skip the login/signup pages.
+// Optimistic check only: app pages need the session cookie and signed-in users
+// skip login/signup. The cookie itself is verified in the pages (lib/session.ts).
 export function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
   const signedIn = request.cookies.has(SESSION_COOKIE);

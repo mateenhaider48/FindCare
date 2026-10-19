@@ -2,33 +2,27 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-
-import { nextPath } from "@/lib/auth";
-import { auth } from "@/lib/firebase";
-import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { useState } from "react";
-
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { nextPath } from "@/lib/auth";
+import { authErrorMessage, createSession } from "@/lib/auth-client";
+import { getFirebaseAuth } from "@/lib/firebase";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import GoogleButton from "./GoogleButton";
 import PasswordInput from "./PasswordInput";
 
-const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
 export default function SignupForm() {
+  const router = useRouter();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
+
   const submit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
     if (loading) return;
-
     setError("");
 
-    // Form reference ko await se pehle capture karo.
-    const form = e.currentTarget;
-    const formData = new FormData(form);
-
+    const formData = new FormData(e.currentTarget);
     const name = String(formData.get("name") ?? "").trim();
     const email = String(formData.get("email") ?? "").trim();
     const password = String(formData.get("password") ?? "");
@@ -40,65 +34,15 @@ export default function SignupForm() {
     }
 
     setLoading(true);
-
     try {
-      // Firebase account create karega.
-      const credential = await createUserWithEmailAndPassword(
-        auth,
-        email,
-        password,
-      );
-
-      // Firebase profile mein user ka naam save karo.
-      await updateProfile(credential.user, {
-        displayName: name,
-      });
-      const idToken = await credential.user.getIdToken(true);
-       const response = await fetch(
-        `${API_URL}/api/auth/session`,
-        {
-          method: "POST",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ idToken }),
-        }
-      );
-
-      const data = await response.json();
-
-      if (!response.ok || !data.success) {
-        setError(data.message || "SESSION_CREATION_FAILED");
-      }
-
-
-      router.push("/dashboard");
-    
-    } catch (error: unknown) {
-    
-      const errorCode =
-        typeof error === "object" && error !== null && "code" in error
-          ? String(error.code)
-          : "";
-
-      switch (errorCode) {
-        case "auth/email-already-in-use":
-          setError("This email is already registered. Please log in instead.");
-          break;
-        case "auth/invalid-email":
-          setError("Please enter a valid email address.");
-          break;
-        case "auth/weak-password":
-          setError("Please choose a stronger password.");
-          break;
-        case "auth/network-request-failed":
-          setError("Network error. Please check your connection.");
-          break;
-        default:
-          setError("Failed to create an account. Please try again.");
-      }
-    } finally {
+      const { user } = await createUserWithEmailAndPassword(getFirebaseAuth(), email, password);
+      // Set the name before the session is created so the ID token carries it.
+      await updateProfile(user, { displayName: name });
+      await createSession(user);
+      router.replace(nextPath());
+      router.refresh();
+    } catch (err) {
+      setError(authErrorMessage(err, "Failed to create an account. Please try again."));
       setLoading(false);
     }
   };
