@@ -5,8 +5,8 @@ from agents.app.schemas.state import MedicalState
 
 
 nutrition_retriever = build_retriever(
-    "agents/data/nutrition/nutrition.pdf",
-    "agents/data/nutrition/chroma_db"
+    "data/nutrition/nutrition.pdf",
+    "data/nutrition/chroma_db"
 )
 
 

@@ -2,7 +2,7 @@ from agents.app.llm import llm
 from agents.app.rag.rag import build_retriever
 from agents.app.schemas.state import MedicalState
 
-urology_retriever = build_retriever("agents/data/urology/urology.pdf", "agents/data/urology/chroma_db")
+urology_retriever = build_retriever("data/urology/urology.pdf", "data/urology/chroma_db")
 
 def urology_agent(state: MedicalState) -> dict:
     query = f"""

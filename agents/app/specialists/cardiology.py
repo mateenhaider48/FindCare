@@ -1,10 +1,17 @@
+import time
+
 from agents.app.llm import llm
 from agents.app.rag.rag import build_retriever
 from agents.app.schemas.state import MedicalState
 
-cardiology_retriever = build_retriever("agents/data/cardiology/cardiology.pdf", "agents/data/cardiology/chroma_db")
+cardiology_retriever = build_retriever(
+    "data/cardiology/cardiology.pdf",
+    "data/cardiology/chroma_db"
+)
+
 
 def cardiology_agent(state: MedicalState) -> dict:
+    total_start = time.perf_counter()
 
     symptoms = state["symptoms"]
     duration = state["duration"]
@@ -19,11 +26,15 @@ def cardiology_agent(state: MedicalState) -> dict:
     Associated symptoms: {associated_symptoms}
     """
 
+    # 1. RAG retrieval timing
+    start = time.perf_counter()
     docs = cardiology_retriever.invoke(query)
+    print(f"[TIMING] Cardiology RAG retrieval: {time.perf_counter() - start:.2f}s")
 
     cardiology_context = "\n\n".join(
         doc.page_content for doc in docs
     )
+
     prompt = f"""
         You are a Cardiology Medical Assistant.
 
@@ -121,10 +132,16 @@ def cardiology_agent(state: MedicalState) -> dict:
         - Do not provide a definitive diagnosis.
         - Do not prescribe personalized medication or dosage.
         - Prioritize emergency warning signs when present.
-        """
+    """
+
+    # 2. Specialist LLM timing
+    start = time.perf_counter()
     response = llm.invoke(prompt)
+    print(f"[TIMING] Cardiology LLM: {time.perf_counter() - start:.2f}s")
+
+    # 3. Total cardiology agent timing
+    print(f"[TIMING] Cardiology agent total: {time.perf_counter() - total_start:.2f}s")
+
     return {
         "final_response": response.content
     }
-
-

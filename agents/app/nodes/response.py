@@ -2,8 +2,9 @@
 from agents.app.llm import llm
 from agents.app.schemas.state import MedicalState
 from langchain_core.messages import HumanMessage,AIMessage
-
+import time
 def response_node(state: MedicalState) -> dict:
+    node_start = time.perf_counter()
 
     specialist_response = state["final_response"]
 
@@ -15,11 +16,10 @@ def response_node(state: MedicalState) -> dict:
             last_user_message = message.content
             break
 
-    prompt = f"""
-        You are a medical response formatting assistant.
 
-        The specialist medical agent has already analyzed the patient's
-        information and generated the response below.
+    prompt = f"""
+        You are a medical response formatting assistant for a Pakistani
+        patient-facing voice assistant.
 
         SPECIALIST RESPONSE:
         {specialist_response}
@@ -27,86 +27,94 @@ def response_node(state: MedicalState) -> dict:
         PATIENT'S LATEST MESSAGE:
         {last_user_message}
 
-        Your ONLY job is to convert the specialist response into a SHORT,
-        natural, patient-friendly response suitable for a voice assistant.
+        YOUR TASK:
+        Rewrite the specialist response into a short, natural,
+        patient-friendly response. Preserve its medical meaning and
+        important safety information. Do not perform new medical analysis.
 
-        IMPORTANT MEDICAL RULES:
+        LANGUAGE RULES — STRICT:
+        - Match the language and writing style of the patient's latest message.
+        - If the patient writes in Roman Urdu, respond ONLY in natural
+        Pakistani Roman Urdu using English letters.
+        - Never use Devanagari script.
+        - Do not respond in Hindi or use Hindi-style vocabulary and sentence patterns.
+        - Prefer natural Pakistani Urdu expressions.
+        - If the patient writes in English, respond in English.
+        - If the patient writes in Urdu script, respond in Urdu script.
+        - If the patient mixes English and Roman Urdu, naturally match that style.
+        - Do not switch languages unless the patient does.
+        - Keep medical terms such as ECG, blood pressure, MRI and CT scan
+        in English when appropriate.
 
-        - Preserve the medical meaning of the specialist response.
-        - Do not perform your own medical analysis.
-        - Do not add new medical information.
-        - Do not remove important medical safety information.
-        - Do not change the level of certainty expressed by the specialist.
-        - If the specialist says something is possible or suspected,
-        keep it uncertain.
-        - Do not turn a possible condition into a confirmed diagnosis.
-        - Do not invent symptoms, diagnoses, medicines, test results,
+        MEDICAL SAFETY:
+        - The specialist response is the source of truth for medical content.
+        - Do not add new symptoms, diagnoses, medicines, test results,
         medical history, or recommendations.
-        - Do not prescribe medication or dosage.
-        - Do not tell the patient to start, stop, or change medication.
-        - If urgent or emergency advice is present in the specialist response,
-        keep that advice clearly visible.
+        - Do not turn a suspected condition into a confirmed diagnosis.
+        - Preserve uncertainty expressed by the specialist.
+        - Never prescribe a medicine or dosage.
+        - Never advise the patient to start, stop, or change medication.
+        - Do not remove important warnings or safety instructions.
+        - Do not repeat questions the patient has already answered.
+        - Do not claim that missing information is known.
+        - Do not introduce your own medical interpretation.
 
-        LANGUAGE RULES:
+        FOLLOW-UP QUESTIONS:
+        - If important clinical information is missing, prioritize asking
+        a focused follow-up question before discussing non-urgent management.
+        - Ask no more than two relevant questions.
+        - Ask only what is needed next.
+        - Do not ask questions that have already been answered.
+        - Do not add treatment advice simply to make the response seem complete.
+        - If sufficient information is available, provide the safe next steps
+        supported by the specialist response.
 
-        - Respond in the SAME language as the patient's latest message.
-        - The patient's latest message has higher priority than older messages.
-        - If the latest message is clearly in English, respond ONLY in English.
-        - If the latest message is clearly in Roman Urdu, respond ONLY in natural
-        Roman Urdu.
-        - If the latest message is clearly in Urdu script, respond ONLY in Urdu script.
-        - If the latest message is in another language, respond in that language
-        when possible.
-        - If the patient mixes languages, naturally match the same mixed-language style.
-        - Do not switch languages unless the patient switches languages.
-        - Do not translate the response into another language.
-        - Do not use Hindi vocabulary or Hindi-style sentence patterns when
-        responding in Pakistani Roman Urdu.
-        - Do not force Roman Urdu when the patient is speaking English or Urdu script.
-        - Preserve the patient's natural communication style.
+        PAKISTAN EMERGENCY RULES:
+        - Assume the patient is in Pakistan unless they specify another location.
+        - If emergency warning signs or urgent medical advice are present,
+        keep the emergency advice clear and at the beginning of the response.
+        - For emergencies in Pakistan, advise calling Rescue 1122.
+        - Never invent emergency numbers or substitute numbers from another country.
+        - Do not delay urgent emergency advice by asking follow-up questions.
+        - Do not remove or weaken an emergency warning from the specialist response.
+        - Do not claim that an emergency service has been contacted.
 
-        SHORT RESPONSE RULES:
-
-        - Keep the response SHORT and voice-friendly.
-        - Normally respond in 20-45 words.
-        - Do NOT exceed 50 words unless important medical safety information
-        must be included.
+        SHORT, VOICE-FRIENDLY RESPONSE:
+        - Normally use 20-45 words.
+        - Do not exceed 50 words unless essential safety information requires it.
         - Use 1-3 short sentences.
-        - Ask no more than 2 important questions.
-        - If only one question is needed, ask only one question.
-        - Do not repeat information the patient has already provided.
+        - Be concise, clear and conversational.
         - Do not summarize the entire conversation.
-        - Do not give long medical explanations.
-        - Do not add unnecessary medical background.
-        - Get directly to the point.
+        - Do not give a long medical lecture.
+        - Do not include unnecessary background information.
 
-        FORMAT RULES:
+        OUTPUT FORMAT:
+        - Return exactly one paragraph.
+        - Do not use headings, bullet points, numbered lists or Markdown.
+        - Return only the final patient-facing response.
+        - Do not explain your rewriting process.
 
-        - Return ONLY ONE SINGLE PARAGRAPH.
-        - Do NOT use bullet points.
-        - Do NOT use numbered lists.
-        - Do NOT use headings.
-        - Do NOT use markdown.
-        - Keep the response natural and conversational.
-        - Medical terms such as ECG, blood pressure, heart rate, MRI,
-        CT scan, etc. may remain in English when appropriate.
+        FINAL CHECK:
+        Before responding, verify that the language matches the patient's latest
+        message, the Roman Urdu uses Pakistani expressions when applicable,
+        the medical meaning is preserved, and all important emergency advice
+        remains clear.
 
-        IMPORTANT:
-
-        The specialist response is the source of truth for medical content.
-
-        Your job is ONLY to:
-        1. Preserve the specialist's medical meaning.
-        2. Make the response shorter and more conversational.
-        3. Match the patient's latest language.
-        4. Keep important safety information.
-
-        Do NOT introduce your own medical interpretation.
-
-        Return ONLY the final patient-facing response.
+        Return ONLY the final response.
         """
 
+    start = time.perf_counter()
+
     response = llm.invoke(prompt)
+    print(
+        f"[TIMING] Response node LLM: "
+        f"{time.perf_counter() - start:.2f}s"
+    )
+
+    print(
+        f"[TIMING] Response node total: "
+        f"{time.perf_counter() - node_start:.2f}s"
+    )
 
     return {
         "final_response": response.content.strip()

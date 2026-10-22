@@ -3,7 +3,7 @@ from agents.app.rag.rag import build_retriever
 from agents.app.schemas.state import MedicalState
 
 
-hematology_retriever = build_retriever("agents/data/hematology/hematology.pdf","agents/data/hematology/chroma_db")
+hematology_retriever = build_retriever("data/hematology/hematology.pdf","data/hematology/chroma_db")
 
 
 def hematology_agent(state: MedicalState) -> dict:

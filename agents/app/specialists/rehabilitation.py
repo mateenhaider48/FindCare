@@ -4,8 +4,8 @@ from agents.app.schemas.state import MedicalState
 
 
 rehabilitation_retriever = build_retriever(
-    "agents/data/rehabilitation/rehabilitation.pdf",
-    "agents/data/rehabilitation/chroma_db"
+    "data/rehabilitation/rehabilitation.pdf",
+    "data/rehabilitation/chroma_db"
 )
 
 

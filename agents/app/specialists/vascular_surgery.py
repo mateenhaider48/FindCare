@@ -3,7 +3,7 @@ from agents.app.rag.rag import build_retriever
 from agents.app.schemas.state import MedicalState
 
 
-vascular_surgery_retriever = build_retriever("agents/data/vascular_surgery/vascular_surgery.pdf","agents/data/vascular_surgery/chroma_db")
+vascular_surgery_retriever = build_retriever("data/vascular_surgery/vascular_surgery.pdf","data/vascular_surgery/chroma_db")
 
 
 def vascular_surgery_agent(state: MedicalState) -> dict:
