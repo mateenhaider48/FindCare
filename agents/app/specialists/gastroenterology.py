@@ -2,7 +2,7 @@ from agents.app.llm import llm
 from agents.app.rag.rag import build_retriever
 from agents.app.schemas.state import MedicalState
 
-gastroenterology_retriever = build_retriever("agents/data/gastroenterology/gastroenterology.pdf", "agents/data/gastroenterology/chroma_db")
+gastroenterology_retriever = build_retriever("data/gastroenterology/gastroenterology.pdf", "data/gastroenterology/chroma_db")
 
 def gastroenterology_agent(state: MedicalState) -> dict:
 

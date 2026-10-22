@@ -2,7 +2,7 @@ from agents.app.llm import llm
 from agents.app.rag.rag import build_retriever
 from agents.app.schemas.state import MedicalState
 
-nephrology_retriever = build_retriever("agents/data/nephrology/nephrology.pdf", "agents/data/nephrology/chroma_db")
+nephrology_retriever = build_retriever("data/nephrology/nephrology.pdf", "data/nephrology/chroma_db")
 
 def nephrology_agent(state: MedicalState) -> dict:
 

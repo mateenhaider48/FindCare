@@ -1,88 +1,78 @@
-from pwdlib import PasswordHash
-from datetime import datetime, timedelta, timezone
-from jose import jwt
-from backend.app.core.config import settings
-from jose import JWTError, jwt
-from fastapi import Cookie,Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
+from fastapi import Cookie, Depends, HTTPException, status
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from firebase_admin import auth
 from sqlalchemy.orm import Session
+
+from backend.app.core import firebase  # noqa: F401  (initialises the Firebase Admin app)
 from backend.app.db.database import get_db
 from backend.app.db.models.users import User
 
-password_hash = PasswordHash.recommended()
+
+SESSION_COOKIE = "fc_session"
+
+security = HTTPBearer(auto_error=False)
 
 
-def hash_password(password: str) -> str:
-    return password_hash.hash(password)
+def _verify(
+    credentials: HTTPAuthorizationCredentials | None,
+    session_cookie: str | None,
+) -> dict:
+    """Accept either the httpOnly session cookie or a Firebase ID token."""
+    if session_cookie:
+        try:
+            return auth.verify_session_cookie(
+                session_cookie, check_revoked=True, clock_skew_seconds=60
+            )
+        except Exception:
+            # Stale or invalid cookie: fall back to a bearer token if one was sent.
+            pass
 
+    if credentials:
+        try:
+            return auth.verify_id_token(
+                credentials.credentials, check_revoked=True, clock_skew_seconds=60
+            )
+        except Exception:
+            pass
 
-def verify_password(password: str, hashed_password: str) -> bool:
-    return password_hash.verify(password, hashed_password)
-
-
-def create_access_token(
-    user_id: int,
-    expires_delta: timedelta | None = None,
-) -> str:
-
-    if expires_delta is None:
-        expires_delta = timedelta(
-            minutes=settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES
-        )
-
-    expire = datetime.now(timezone.utc) + expires_delta
-
-    payload = {
-        "sub": str(user_id),
-        "exp": expire,
-    }
-
-    token = jwt.encode(
-        payload,
-        settings.JWT_SECRET_KEY,
-        algorithm=settings.JWT_ALGORITHM,
-    )
-
-    return token    
-
-
-def get_current_user(
-    access_token: str | None = Cookie(default=None),
-    db: Session = Depends(get_db),
-) -> User:
-
-    credentials_exception = HTTPException(
+    raise HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Not authenticated",
     )
 
-    if access_token is None:
-        raise credentials_exception
 
-    try:
-        payload = jwt.decode(
-            access_token,
-            settings.JWT_SECRET_KEY,
-            algorithms=[settings.JWT_ALGORITHM],
+def get_current_user(
+    credentials: HTTPAuthorizationCredentials | None = Depends(security),
+    fc_session: str | None = Cookie(default=None),
+    db: Session = Depends(get_db),
+) -> User:
+    decoded = _verify(credentials, fc_session)
+
+    firebase_uid = decoded.get("uid")
+    email = decoded.get("email")
+
+    if not firebase_uid or not email:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated",
         )
 
-        user_id = payload.get("sub")
-
-        if user_id is None:
-            raise credentials_exception
-
-        user_id = int(user_id)
-
-    except (JWTError, ValueError):
-        raise credentials_exception
-
-    user = (
-        db.query(User)
-        .filter(User.id == user_id)
-        .first()
-    )
+    user = db.query(User).filter(User.firebase_uid == firebase_uid).first()
 
     if user is None:
-        raise credentials_exception
+        user = User(
+            firebase_uid=firebase_uid,
+            email=email,
+            name=decoded.get("name") or email.split("@")[0],
+        )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Account is disabled",
+        )
 
     return user

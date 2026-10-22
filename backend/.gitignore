@@ -33,3 +33,6 @@ htmlcov/
 
 # Alembic / local files
 *.db
+# Firebase service account (secret)
+firebase-service-account.json
+*firebase-adminsdk*.json
